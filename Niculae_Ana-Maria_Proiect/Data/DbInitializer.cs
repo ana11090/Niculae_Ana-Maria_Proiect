@@ -1,6 +1,7 @@
 ﻿using Niculae_Ana_Maria_Proiect.Models;
 using System;
 using Microsoft.EntityFrameworkCore;
+using Niculae_Ana_Maria_Proiect.Models.View;
 
 namespace Niculae_Ana_Maria_Proiect.Data
 {
@@ -10,49 +11,49 @@ namespace Niculae_Ana_Maria_Proiect.Data
         {
             using (var context = new LibraryContext(serviceProvider.GetRequiredService<DbContextOptions<LibraryContext>>()))
             {
-                // Verifică dacă există deja proiecte în baza de date
+                // Check if there are already projects in the database
                 if (context.Proiecte.Any())
                 {
-                    return; // Baza de date a fost deja inițializată
+                    return; // The database has already been initialized
                 }
 
-                // Crează câțiva manageri
+                // Create some managers
                 var manager1 = new Manager { Nume = "Ion Popescu" };
                 var manager2 = new Manager { Nume = "Maria Ionescu" };
 
-                // Adaugă managerii în context
+                // Add managers to the context
                 context.Manageri.AddRange(manager1, manager2);
                 context.SaveChanges();
 
-                // Crează câteva proiecte
+                // Create some projects
                 var proiect1 = new Proiect { Nume = "Proiectul A", ManagerId = manager1.ManagerId };
                 var proiect2 = new Proiect { Nume = "Proiectul B", ManagerId = manager2.ManagerId };
 
-                // Adaugă proiectele în context
+                // Add projects to the context
                 context.Proiecte.AddRange(proiect1, proiect2);
                 context.SaveChanges();
 
-                // Crează membri ai echipei
+                // Create team members
                 var membru1 = new MembruEchipa { Nume = "Andrei Georgescu" };
                 var membru2 = new MembruEchipa { Nume = "Elena Vasilescu" };
 
-                // Adaugă membrii echipei în context
+                // Add team members to the context
                 context.MembriEchipa.AddRange(membru1, membru2);
                 context.SaveChanges();
 
-                // Crează sarcini și asociază-le cu proiecte
+                // Create tasks and associate them with projects
                 var sarcina1 = new Sarcina { Descriere = "Analiza cerințe", ProiectId = proiect1.ProiectId };
                 var sarcina2 = new Sarcina { Descriere = "Dezvoltare funcționalități", ProiectId = proiect2.ProiectId };
 
-                // Adaugă sarcinile în context
+                // Add tasks to the context
                 context.Sarcini.AddRange(sarcina1, sarcina2);
                 context.SaveChanges();
 
-                // Asociază membrii echipei cu sarcini (many-to-many)
-                sarcina1.MembriEchipa.Add(membru1);
-                sarcina2.MembriEchipa.Add(membru2);
+                // Associate team members with tasks (many-to-many)
+                sarcina1.SarcinaMembriEchipa.Add(new SarcinaMembruEchipa { Sarcina = sarcina1, MembruEchipa = membru1 });
+                sarcina2.SarcinaMembriEchipa.Add(new SarcinaMembruEchipa { Sarcina = sarcina2, MembruEchipa = membru2 });
 
-                // Salvează toate modificările în baza de date
+                // Save all changes to the database
                 context.SaveChanges();
             }
         }

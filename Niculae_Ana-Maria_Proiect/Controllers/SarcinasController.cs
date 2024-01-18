@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Niculae_Ana_Maria_Proiect.Data;
 using Niculae_Ana_Maria_Proiect.Models;
+using Niculae_Ana_Maria_Proiect.Models.View;
 
 namespace Niculae_Ana_Maria_Proiect.Controllers
 {
@@ -48,11 +49,13 @@ namespace Niculae_Ana_Maria_Proiect.Controllers
         // GET: Sarcinas/Create
         public IActionResult Create()
         {
+            // Obțineți lista de membri ai echipei din baza de date și puneți-o în ViewData
+            ViewData["MembriEchipa"] = _context.MembriEchipa.ToList();
+
             ViewData["ProiectId"] = new SelectList(_context.Proiecte, "ProiectId", "Nume");
-            ViewData["MembriEchipa"] = new MultiSelectList(_context.MembriEchipa, "MembruEchipaId", "Nume");
+
             return View();
         }
-
 
         // POST: Sarcinas/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
@@ -69,7 +72,6 @@ namespace Niculae_Ana_Maria_Proiect.Controllers
         //}
 
 
-        // POST: Sarcina/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Sarcina model, [FromForm] List<int> membriEchipaIds)
@@ -83,14 +85,16 @@ namespace Niculae_Ana_Maria_Proiect.Controllers
                 {
                     foreach (int membruId in membriEchipaIds)
                     {
-                        var membru = await _context.MembriEchipa.FindAsync(membruId);
-                        if (membru != null)
+                        var membruEchipa = await _context.MembriEchipa.FindAsync(membruId);
+                        if (membruEchipa != null)
                         {
-                            // Verifică dacă relația nu există deja
-                            if (!model.MembriEchipa.Any(m => m.MembruEchipaId == membruId))
+                            // Creați o instanță a clasei intermediare și adăugați relația
+                            var sarcinaMembruEchipa = new SarcinaMembruEchipa
                             {
-                                model.MembriEchipa.Add(membru);
-                            }
+                                Sarcina = model,
+                                MembruEchipa = membruEchipa
+                            };
+                            _context.SarcinaMembriEchipa.Add(sarcinaMembruEchipa);
                         }
                     }
                 }
@@ -106,6 +110,8 @@ namespace Niculae_Ana_Maria_Proiect.Controllers
 
             return View(model);
         }
+
+
 
         // GET: Sarcinas/Edit/5
         public async Task<IActionResult> Edit(int? id)

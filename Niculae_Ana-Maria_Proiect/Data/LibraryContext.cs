@@ -2,6 +2,7 @@
 using System.Reflection.Emit;
 using Microsoft.EntityFrameworkCore;
 using Niculae_Ana_Maria_Proiect.Models;
+using Niculae_Ana_Maria_Proiect.Models.View;
 
 namespace Niculae_Ana_Maria_Proiect.Data
 {
@@ -19,7 +20,7 @@ namespace Niculae_Ana_Maria_Proiect.Data
         public DbSet<Comentariu> Comentarii { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {    // Configurarea relației one-to-many între Manager și Proiect
+        {// Configurarea relației one-to-many între Manager și Proiect
             modelBuilder.Entity<Manager>()
                 .HasMany(m => m.Proiecte)
                 .WithOne(p => p.ManagerProiect)
@@ -31,31 +32,31 @@ namespace Niculae_Ana_Maria_Proiect.Data
                 .WithOne(s => s.ProiectAsociat)
                 .HasForeignKey(s => s.ProiectId);
 
-            // Configurarea relației many-to-many între Sarcina și MembruEchipa
-            modelBuilder.Entity<Sarcina>()
-                .HasMany(s => s.MembriEchipa)
-                .WithMany(m => m.Sarcini)
-                .UsingEntity<Dictionary<string, object>>(
-                    "SarcinaMembruEchipa", // Numele tabelului de joncțiune
-                    j => j.HasOne<MembruEchipa>().WithMany().HasForeignKey("MembruEchipaId"),
-                    j => j.HasOne<Sarcina>().WithMany().HasForeignKey("SarcinaId"),
-                    j =>
-                    {
-                        j.HasKey("SarcinaId", "MembruEchipaId"); // Chei primare compuse pentru tabelul de joncțiune
-                    });
+            modelBuilder.Entity<SarcinaMembruEchipa>()
+              .HasKey(sm => new { sm.SarcinaId, sm.MembruEchipaId });
 
-            // Configurarea relației one-to-many între Proiect/Sarcina și Comentariu
-            modelBuilder.Entity<Proiect>()
-                .HasMany(p => p.Comentarii)
-                .WithOne(c => c.Proiect)
-                .HasForeignKey(c => c.ProiectId)
-                .OnDelete(DeleteBehavior.Cascade); // Opțional, setează comportamentul de ștergere
+            modelBuilder.Entity<SarcinaMembruEchipa>()
+                .HasOne(sm => sm.Sarcina)
+                .WithMany(s => s.SarcinaMembriEchipa)
+                .HasForeignKey(sm => sm.SarcinaId);
 
-            modelBuilder.Entity<Sarcina>()
-                .HasMany(s => s.Comentarii)
-                .WithOne(c => c.Sarcina)
-                .HasForeignKey(c => c.SarcinaId)
-                .OnDelete(DeleteBehavior.Cascade); // Opțional, setează comportamentul de ștergere
+            modelBuilder.Entity<SarcinaMembruEchipa>()
+                .HasOne(sm => sm.MembruEchipa)
+                .WithMany(m => m.SarcinaMembriEchipa)
+                .HasForeignKey(sm => sm.MembruEchipaId);
+
+            modelBuilder.Entity<Comentariu>()
+                .HasOne(c => c.Proiect)
+                .WithMany(p => p.Comentarii)
+                .HasForeignKey(c => c.ProiectId);
+
+            modelBuilder.Entity<Comentariu>()
+                .HasOne(c => c.Sarcina)
+                .WithMany(s => s.Comentarii)
+                .HasForeignKey(c => c.SarcinaId);
         }
+
     }
+
+
 }
